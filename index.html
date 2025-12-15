@@ -5,87 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Glimmer Hunter</title>
     <style>
-        /* This section controls how the app LOOKS (The CSS) */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #fcfcfc;
+            background-color: #FAFAFA; /* Slightly warmer white */
             color: #333;
             text-align: center;
             padding: 20px;
             margin: 0;
-            height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+        h1 { font-size: 24px; margin-bottom: 5px; }
+        p { color: #666; margin-top: 0; }
 
         #counter {
-            font-size: 80px;
-            font-weight: bold;
-            color: #FFD700; /* Gold color */
-            margin: 20px 0;
+            font-size: 70px;
+            font-weight: 800;
+            color: #FFD700;
+            margin: 10px 0;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
         }
+
+        /* The Input Box Style */
+        #glimmerInput {
+            width: 80%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            outline: none;
+            text-align: center;
+        }
+        
+        #glimmerInput:focus { border-color: #FFD700; }
 
         button {
-            background-color: #333;
+            background-color: #222;
             color: white;
             border: none;
-            padding: 20px;
+            padding: 15px 30px;
             font-size: 18px;
-            border-radius: 15px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            touch-action: manipulation; /* Improves tapping on mobile */
+            width: 90%;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        button:active {
-            transform: scale(0.95); /* Shrinks slightly when tapped */
+        button:active { transform: scale(0.98); }
+
+        /* The List Style */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        li {
+            background: white;
+            margin: 10px auto;
+            padding: 15px;
+            width: 85%;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between; /* Pushes time to the right */
+            color: #444;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
 
     <h1>Glimmer Hunter</h1>
-    <p>Micro-moments of joy found today:</p>
+    <p>Capture the magic.</p>
     
     <div id="counter">0</div>
     
-    <button onclick="addGlimmer()">✨ I saw a Glimmer!</button>
+    <input type="text" id="glimmerInput" placeholder="What did you see?">
+    
+    <button onclick="addGlimmer()">✨ Save Glimmer</button>
+
+    <ul id="glimmerList"></ul>
 
     <script>
-    // PART 1: Initialize (Read the saved number when the app loads)
-    // LocalStorage lets the app save small pieces of text on the user's phone.
-    
-    // 1. Get the saved value for 'glimmerCount' or use 0 if nothing is saved yet.
-    let count = parseInt(localStorage.getItem('glimmerCount')) || 0;
-    
-    // 2. Display the saved number when the app starts
-    document.getElementById("counter").innerText = count;
+        // 1. Load saved Data on startup
+        let count = parseInt(localStorage.getItem('glimmerCount')) || 0;
+        let glimmerHistory = JSON.parse(localStorage.getItem('glimmerHistory')) || [];
 
-
-    // PART 2: The Action (Increase the number and save it)
-    function addGlimmer() {
-        // 1. Increase the count by 1
-        count = count + 1;
-        
-        // 2. Update the number on the screen
         document.getElementById("counter").innerText = count;
+        renderHistory(); // Draw the list when app opens
 
-        // 3. NEW: Save the updated count to the phone's memory
-        localStorage.setItem('glimmerCount', count);
+        function addGlimmer() {
+            const inputField = document.getElementById("glimmerInput");
+            const text = inputField.value;
 
-        // Optional: Vibration feedback for a better app feel (iOS compatible)
-        if (window.navigator.vibrate) {
-            window.navigator.vibrate(50); // Vibrate for 50 milliseconds
+            // Simple check: Don't save empty glimmers
+            if (text.trim() === "") {
+                alert("Please type what you saw first!");
+                return;
+            }
+
+            // 1. Update Count
+            count++;
+            document.getElementById("counter").innerText = count;
+            localStorage.setItem('glimmerCount', count);
+
+            // 2. Add to History List
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Add new item to the TOP of the list (unshift)
+            glimmerHistory.unshift({ text: text, time: timeString });
+            
+            // Save the list to phone memory
+            localStorage.setItem('glimmerHistory', JSON.stringify(glimmerHistory));
+
+            // 3. Clear the input box and redraw the list
+            inputField.value = "";
+            renderHistory();
         }
-    }
-</script>
+
+        function renderHistory() {
+            const listElement = document.getElementById("glimmerList");
+            listElement.innerHTML = ""; // Clear current list to avoid duplicates
+
+            // Loop through every saved glimmer and make a list item <li>
+            glimmerHistory.forEach(item => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${item.text}</span> <span class="timestamp">${item.time}</span>`;
+                listElement.appendChild(li);
+            });
+        }
+    </script>
 
 </body>
 </html>
