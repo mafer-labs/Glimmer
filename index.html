@@ -68,13 +68,38 @@
             gap: 5px;
         }
 
+        /* --- UPDATED H1 FOR GLITTER EFFECT --- */
         h1 { 
-            font-size: 24px; 
-            font-weight: 700; 
+            font-size: 34px; /* Bigger font */
+            font-weight: 800; /* Extra bold for more sparkle area */
             margin: 0; 
             letter-spacing: -0.5px;
-            color: #00695C; 
             flex-grow: 1;
+            
+            /* The Glitter Gradient definition */
+            background: linear-gradient(
+                to right,
+                #00695C 20%,
+                #26A69A 30%,
+                #FFD54F 40%, /* Gold sparkle */
+                #FFFFFF 50%, /* White flash */
+                #FFD54F 60%, /* Gold sparkle */
+                #26A69A 70%,
+                #00695C 80%
+            );
+            background-size: 200% auto; /* Make background wider to animate it */
+            
+            /* Clip the background to the text and make text transparent */
+            color: #00695C; /* Fallback */
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            /* Add the shimmer animation */
+            animation: shimmer 3s linear infinite;
+            
+            /* A subtle text shadow to make it pop off the screen slightly */
+            text-shadow: 0px 2px 4px rgba(0, 105, 92, 0.15);
         }
 
         .top-right-controls { display: flex; gap: 8px; align-items: center; }
@@ -257,6 +282,12 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* --- NEW ANIMATION FOR GLITTER SHIMMER --- */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
 
     </style>
 </head>
