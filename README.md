@@ -2,7 +2,7 @@
 
 A minimalist Progressive Web App (PWA) designed to help users capture "glimmers"—micro-moments of safety, joy, and calm—to combat stress and negative bias.
 
-**[✨ View Live App](https://mafer-cordovas.github.io/Glimmer/)**
+**[✨ View Live App](https://mafer-labs.github.io/Glimmer/)**
 
 ![Version](https://img.shields.io/badge/version-8.0-teal)
 ![Status](https://img.shields.io/badge/status-live-success)
