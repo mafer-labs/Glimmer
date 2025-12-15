@@ -7,10 +7,19 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <style>
+        :root {
+            /* THE NEW CALMING PALETTE */
+            --bg-gradient: linear-gradient(135deg, #E0F7FA 0%, #E8F5E9 100%); /* Light Aqua to Mint */
+            --primary-color: #26A69A; /* Soothing Teal/Aqua Green */
+            --text-color: #37474F; /* Dark Blue-Grey (Softer than black) */
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            color: #333;
+            background: var(--bg-gradient);
+            color: var(--text-color);
             text-align: center;
             padding: 20px;
             margin: 0;
@@ -20,80 +29,79 @@
             align-items: center;
         }
 
-        /* Top Bar Container */
+        /* Top Bar */
         .top-bar {
             width: 100%;
             display: flex;
-            justify-content: space-between; /* Pushes items to Left, Center, Right */
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
-            box-sizing: border-box; 
         }
 
-        /* 1. The Streak Badge (Top Left) */
         .streak-badge {
             background: white;
             padding: 8px 12px;
             border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(167, 219, 216, 0.3); /* Soft teal shadow */
             font-weight: 700;
-            color: #FF4500;
+            color: #FF7043; /* Soft Orange for contrast */
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 5px;
-            min-width: 40px; /* Ensures it doesn't shrink too much */
         }
 
-        /* 2. The Title (Center) */
         h1 { 
             font-size: 24px; 
             font-weight: 700; 
             margin: 0; 
             letter-spacing: -0.5px;
-            flex-grow: 1; /* Takes up available space */
+            color: #00695C; /* Dark Teal title */
+            flex-grow: 1;
         }
 
-        /* 3. The Reset Button (Top Right) */
         .reset-btn-top {
             background: transparent;
             border: none;
             font-size: 24px;
-            color: #ccc; /* Grey so it is not distracting */
+            color: #90A4AE;
             cursor: pointer;
             padding: 0 10px;
-            transition: color 0.3s;
         }
-        .reset-btn-top:active { color: #333; } /* Turns dark when tapped */
 
-        p { color: #888; margin-top: 5px; font-size: 14px; }
+        p { color: #546E7A; margin-top: 5px; font-size: 14px; }
 
+        /* The Counter - Now Aqua/Blue styled */
         #counter {
             font-size: 80px;
             font-weight: 800;
-            background: -webkit-linear-gradient(#FFD700, #FFA500);
+            background: -webkit-linear-gradient(#26C6DA, #00897B); /* Aqua Gradient */
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 10px 0;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));
+            filter: drop-shadow(0px 4px 10px rgba(38, 198, 218, 0.3));
         }
 
+        /* Input Box */
         #glimmerInput {
             width: 85%;
             padding: 16px;
             font-size: 16px;
-            border: none;
+            border: 2px solid transparent;
             border-radius: 20px;
             background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
             margin-bottom: 15px;
             outline: none;
             text-align: center;
+            color: var(--text-color);
+            transition: border 0.3s;
         }
+        #glimmerInput:focus { border-color: var(--primary-color); }
 
-        /* Main Capture Button */
+        /* Main Button - The "Aqua Green" Pop */
         button.capture-btn {
-            background: #222;
+            background: var(--primary-color);
             color: white;
             border: none;
             padding: 18px;
@@ -102,7 +110,7 @@
             cursor: pointer;
             width: 95%;
             font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(38, 166, 154, 0.3); /* Teal colored shadow */
             transition: transform 0.1s;
         }
         button.capture-btn:active { transform: scale(0.96); }
@@ -112,51 +120,107 @@
             padding: 0;
             width: 100%;
             margin-top: 30px;
-            padding-bottom: 50px;
+            padding-bottom: 80px; /* Extra space for footer */
         }
 
         li {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            backdrop-filter: blur(12px);
             margin: 12px auto;
             padding: 16px;
             width: 85%;
             border-radius: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
             display: flex;
             justify-content: space-between;
             align-items: center;
             text-align: left;
             animation: fadeIn 0.5s ease;
+            color: var(--text-color);
         }
 
-        .delete-btn {
-            background: transparent;
-            color: #ddd;
-            font-size: 20px;
-            border: none;
-            padding: 0 10px;
-            margin: 0;
-        }
-        .delete-btn:active { transform: scale(1.1); color: red; }
+        .timestamp { font-size: 11px; color: #90A4AE; display: block; margin-top: 4px; }
         
-        .timestamp { font-size: 11px; color: #aaa; display: block; margin-top: 4px; }
+        .delete-btn { background: transparent; color: #CFD8DC; font-size: 20px; border: none; }
+        .delete-btn:active { color: #EF5350; }
+
+        /* --- FOOTER & LINKS --- */
+        footer {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        footer a {
+            color: #546E7A;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        /* --- MODAL (POPUP) STYLES --- */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-card {
+            background: white;
+            width: 80%;
+            max-width: 400px;
+            padding: 25px;
+            border-radius: 25px;
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popUp 0.3s ease;
+        }
+
+        .modal-card h2 { margin-top: 0; color: var(--primary-color); }
+        .modal-card p { line-height: 1.5; color: var(--text-color); }
+        .close-modal {
+            background: #ECEFF1;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="streak-badge">
-            🔥 <span id="streakCount">0</span>
-        </div>
-
+        <div class="streak-badge">🔥 <span id="streakCount">0</span></div>
         <h1>Glimmer</h1>
-
         <button class="reset-btn-top" onclick="resetAll()">↺</button>
     </div>
     
-    <p>Collect your daily joy.</p>
+    <p>Capture calm moments.</p>
     
     <div id="counter">0</div>
     
@@ -165,6 +229,20 @@
     <button class="capture-btn" onclick="addGlimmer()">✨ Capture</button>
 
     <ul id="glimmerList"></ul>
+
+    <footer>
+        <a onclick="openModal('why')">Why?</a>
+        <a onclick="openModal('about')">About</a>
+        <a onclick="openModal('how')">How to Use</a>
+    </footer>
+
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 id="modalTitle">Title</h2>
+            <p id="modalContent">Content goes here...</p>
+            <button class="close-modal" onclick="closeModal()">Close</button>
+        </div>
+    </div>
 
     <script>
         // --- DATA LOADING ---
@@ -177,29 +255,23 @@
         document.getElementById("streakCount").innerText = streak;
         renderHistory();
 
-        // --- MAIN FUNCTIONS ---
+        // --- CORE FUNCTIONS ---
         function addGlimmer() {
             const inputField = document.getElementById("glimmerInput");
             const text = inputField.value;
 
             if (text.trim() === "") {
-                alert("Type something first!");
+                // Subtle shake or focus instead of alert could be better, but alert is fine for now
+                alert("Please type something...");
                 return;
             }
 
-            // STREAK LOGIC
             const today = new Date().toISOString().split('T')[0];
-            
             if (lastDate !== today) {
-                if (isYesterday(lastDate)) {
-                    streak++;
-                } else {
-                    streak = 1;
-                }
+                if (isYesterday(lastDate)) streak++; else streak = 1;
                 lastDate = today;
             }
 
-            // DATA UPDATES
             count++;
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -207,30 +279,17 @@
             
             saveData();
             
-            // UI UPDATES
             document.getElementById("counter").innerText = count;
             document.getElementById("streakCount").innerText = streak;
             inputField.value = "";
             renderHistory();
         }
 
-        // --- NEW: RESET FUNCTION ---
         function resetAll() {
-            // The Confirmation Warning
-            let userConfirmed = confirm("⚠️ Are you sure you want to delete all Glimmers and reset your Streak? This cannot be undone.");
-
-            if (userConfirmed) {
-                // 1. Reset Variables
-                count = 0;
-                streak = 0;
-                glimmerHistory = [];
-                lastDate = null;
-
-                // 2. Save the empty state
+            if (confirm("Reset all your Glimmers and Streak?")) {
+                count = 0; streak = 0; glimmerHistory = []; lastDate = null;
                 saveData();
-                localStorage.removeItem('lastGlimmerDate'); // Clear the date too
-
-                // 3. Update the screen
+                localStorage.removeItem('lastGlimmerDate');
                 document.getElementById("counter").innerText = "0";
                 document.getElementById("streakCount").innerText = "0";
                 renderHistory();
@@ -245,7 +304,38 @@
             renderHistory();
         }
 
-        // --- HELPER FUNCTIONS ---
+        // --- MODAL FUNCTIONS (New!) ---
+        const modalData = {
+            why: {
+                title: "Why Glimmer?",
+                content: "Our brains are wired to notice danger (triggers). 'Glimmers' are the opposite: tiny moments of safety and joy. Training your brain to spot them reduces stress and boosts happiness."
+            },
+            about: {
+                title: "About",
+                content: "Glimmer Hunter is a minimal tool designed to help you collect micro-moments of joy. Built with a focus on privacy—your data stays on your phone."
+            },
+            how: {
+                title: "How to Use",
+                content: "1. Look for small happy things (a smell, a smile, a color).<br>2. Type it in and tap Capture.<br>3. Try to find at least one every day to build your streak!"
+            }
+        };
+
+        function openModal(type) {
+            document.getElementById("modalTitle").innerText = modalData[type].title;
+            document.getElementById("modalContent").innerHTML = modalData[type].content;
+            document.getElementById("infoModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("infoModal").style.display = "none";
+        }
+
+        // Close modal if clicking outside the box
+        document.getElementById("infoModal").addEventListener("click", function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // --- HELPERS ---
         function saveData() {
             localStorage.setItem('glimmerCount', count);
             localStorage.setItem('glimmerHistory', JSON.stringify(glimmerHistory));
@@ -258,10 +348,7 @@
             listElement.innerHTML = ""; 
             glimmerHistory.forEach((item, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = `
-                    <div><strong>${item.text}</strong><span class="timestamp">${item.time}</span></div>
-                    <button class="delete-btn" onclick="deleteGlimmer(${index})">×</button>
-                `;
+                li.innerHTML = `<div><strong>${item.text}</strong><span class="timestamp">${item.time}</span></div><button class="delete-btn" onclick="deleteGlimmer(${index})">×</button>`;
                 listElement.appendChild(li);
             });
         }
