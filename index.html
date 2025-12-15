@@ -2,8 +2,15 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Glimmer">
+    
     <title>Glimmer</title>
+    
+    <link rel="manifest" href="manifest.json">
+    
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     
@@ -13,7 +20,7 @@
         :root {
             --bg-gradient: linear-gradient(135deg, #E0F7FA 0%, #E8F5E9 100%);
             --primary-color: #26A69A;
-            --secondary-color: #FF7043; /* Orange for accents */
+            --secondary-color: #FF7043; 
             --text-color: #37474F;
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: 1px solid rgba(255, 255, 255, 0.5);
@@ -24,12 +31,15 @@
             background: var(--bg-gradient);
             color: var(--text-color);
             text-align: center;
-            padding: 20px;
+            /* Extra padding at top for iPhone Notch area in full screen */
+            padding: 50px 20px 20px 20px; 
             margin: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            /* Prevents the 'rubber band' scroll effect */
+            overscroll-behavior-y: none;
         }
 
         /* Top Bar */
@@ -63,12 +73,7 @@
             flex-grow: 1;
         }
 
-        /* Top Right Controls */
-        .top-right-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+        .top-right-controls { display: flex; gap: 8px; align-items: center; }
 
         .icon-btn {
             background: transparent;
@@ -95,7 +100,6 @@
             filter: drop-shadow(0px 4px 10px rgba(38, 198, 218, 0.3));
         }
 
-        /* INPUT AREA (Modified for the lightbulb) */
         .input-container {
             width: 90%;
             position: relative;
@@ -119,7 +123,6 @@
         }
         #glimmerInput:focus { border-color: var(--primary-color); }
 
-        /* The Random Prompt Button */
         .prompt-btn {
             background: white;
             border: none;
@@ -127,7 +130,7 @@
             width: 50px;
             height: 50px;
             font-size: 20px;
-            color: #FFB74D; /* Light Orange */
+            color: #FFB74D; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             cursor: pointer;
             flex-shrink: 0;
@@ -201,7 +204,6 @@
             cursor: pointer;
         }
 
-        /* Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -297,16 +299,7 @@
                     about: { title: "About", content: "Glimmer Hunter is a minimal tool designed to help you collect micro-moments of joy. Built with a focus on privacy." },
                     how: { title: "How to Use", content: "1. Look for small happy things.<br>2. Type it in and tap Capture.<br>3. Tap the lightbulb (💡) if you need an idea!" }
                 },
-                // NEW: Prompts list
-                prompts: [
-                    "Did you see a nice color today?",
-                    "Did you hear a good song?",
-                    "Did you enjoy a meal?",
-                    "Did you feel cozy somewhere?",
-                    "Did someone make you smile?",
-                    "Did you see nature today?",
-                    "Did you smell something nice?"
-                ]
+                prompts: ["Did you see a nice color today?", "Did you hear a good song?", "Did you enjoy a meal?", "Did you feel cozy somewhere?", "Did someone make you smile?", "Did you see nature today?", "Did you smell something nice?"]
             },
             es: {
                 subtitle: "Captura momentos de calma.",
@@ -321,15 +314,7 @@
                     about: { title: "Acerca de", content: "Glimmer Hunter es una herramienta minimalista. Privacidad total: tus datos no salen de tu teléfono." },
                     how: { title: "Cómo usar", content: "1. Busca pequeñas cosas felices.<br>2. Escríbelo y toca Capturar.<br>3. ¡Toca la bombilla (💡) si necesitas una idea!" }
                 },
-                prompts: [
-                    "¿Viste un color bonito hoy?",
-                    "¿Escuchaste una buena canción?",
-                    "¿Disfrutaste tu comida?",
-                    "¿Te sentiste cómodo en algún lugar?",
-                    "¿Alguien te hizo sonreír?",
-                    "¿Viste algo de naturaleza?",
-                    "¿Oliste algo agradable?"
-                ]
+                prompts: ["¿Viste un color bonito hoy?", "¿Escuchaste una buena canción?", "¿Disfrutaste tu comida?", "¿Te sentiste cómodo en algún lugar?", "¿Alguien te hizo sonreír?", "¿Viste algo de naturaleza?", "¿Oliste algo agradable?"]
             }
         };
 
@@ -340,7 +325,6 @@
         let lastDate = localStorage.getItem('lastGlimmerDate'); 
         let currentLang = localStorage.getItem('glimmerLang') || 'en';
 
-        // Initialize App
         document.getElementById("counter").innerText = count;
         document.getElementById("streakCount").innerText = streak;
         updateLanguage(currentLang); 
@@ -351,71 +335,43 @@
             const inputField = document.getElementById("glimmerInput");
             const text = inputField.value;
 
-            if (text.trim() === "") {
-                alert(translations[currentLang].emptyWarning);
-                return;
-            }
+            if (text.trim() === "") { alert(translations[currentLang].emptyWarning); return; }
 
-            // STREAK LOGIC
             const today = new Date().toISOString().split('T')[0];
             if (lastDate !== today) {
                 if (isYesterday(lastDate)) streak++; else streak = 1;
                 lastDate = today;
             }
 
-            // DATA SAVE
             count++;
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             glimmerHistory.unshift({ text: text, time: timeString });
             saveData();
             
-            // UI UPDATES
             document.getElementById("counter").innerText = count;
             document.getElementById("streakCount").innerText = streak;
             inputField.value = "";
             renderHistory();
-
-            // FEATURE 1: CONFETTI EXPLOSION!
             fireConfetti();
         }
 
-        // --- NEW FEATURES ---
-
-        // 1. Confetti Function
         function fireConfetti() {
-            // Shoots confetti using the app's colors (Teal & Orange)
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#26A69A', '#FF7043', '#FFD700'],
-                disableForReducedMotion: true
-            });
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#26A69A', '#FF7043', '#FFD700'], disableForReducedMotion: true });
         }
 
-        // 2. Random Prompt (Lightbulb)
         function inspireMe() {
             const list = translations[currentLang].prompts;
-            // Pick a random item from the list
             const randomPrompt = list[Math.floor(Math.random() * list.length)];
-            // Set it as the placeholder so the user sees the question
             const input = document.getElementById("glimmerInput");
             input.placeholder = randomPrompt;
-            // Add a temporary subtle shake animation
             input.style.border = "2px solid #FFB74D";
             setTimeout(() => { input.style.border = "2px solid transparent"; }, 500);
         }
 
-        // 3. Export Data (Download)
         function exportData() {
-            // Create a text version of the history
             let textContent = "GLIMMER HISTORY\n----------------\n";
-            glimmerHistory.forEach(item => {
-                textContent += `[${item.time}] ${item.text}\n`;
-            });
-            
-            // Create a fake invisible link to trigger the download
+            glimmerHistory.forEach(item => { textContent += `[${item.time}] ${item.text}\n`; });
             const blob = new Blob([textContent], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -425,7 +381,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- STANDARD FUNCTIONS ---
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'es' : 'en';
             localStorage.setItem('glimmerLang', currentLang);
