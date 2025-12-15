@@ -16,13 +16,36 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
+        /* --- THEMING VARIABLES --- */
         :root {
+            /* Light Mode (Default) */
             --bg-gradient: linear-gradient(135deg, #E0F7FA 0%, #E8F5E9 100%);
-            --primary-color: #26A69A;
-            --secondary-color: #FF7043; 
             --text-color: #37474F;
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --primary-color: #26A69A;
+            --secondary-color: #FF7043;
+            --accent-gold: #FFD54F;
+            --input-bg: white;
+            --chip-bg: rgba(255,255,255,0.8);
+            --chip-active: #26A69A;
+            --chip-text: #37474F;
+            --chip-text-active: white;
+        }
+
+        /* Dark Mode Override */
+        body.dark-mode {
+            --bg-gradient: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+            --text-color: #E1F5FE;
+            --glass-bg: rgba(20, 20, 40, 0.6);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --primary-color: #64FFDA; /* Brighter teal for dark mode */
+            --secondary-color: #FFAB91;
+            --input-bg: rgba(255,255,255,0.1);
+            --chip-bg: rgba(255,255,255,0.1);
+            --chip-active: #64FFDA;
+            --chip-text: #E1F5FE;
+            --chip-text-active: #000;
         }
 
         body {
@@ -33,7 +56,7 @@
             padding-top: max(50px, env(safe-area-inset-top)); 
             padding-right: 20px;
             padding-left: 20px;
-            padding-bottom: 120px; 
+            padding-bottom: 130px; 
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -41,8 +64,10 @@
             align-items: center;
             overscroll-behavior-y: none;
             box-sizing: border-box;
+            transition: background 0.5s ease, color 0.5s ease; /* Smooth theme switch */
         }
 
+        /* Top Bar */
         .top-bar {
             width: 100%;
             display: flex;
@@ -52,52 +77,37 @@
         }
 
         .streak-badge {
-            background: white;
+            background: var(--glass-bg);
+            border: var(--glass-border);
             padding: 8px 12px;
             border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(167, 219, 216, 0.3);
             font-weight: 700;
             color: var(--secondary-color);
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 5px;
+            backdrop-filter: blur(5px);
         }
 
-        /* --- TITLE STYLES --- */
+        /* Title with Sparkle */
         h1 { 
             font-size: 34px; 
             font-weight: 800; 
             margin: 0; 
             letter-spacing: -0.5px;
             flex-grow: 1;
-            
-            /* The Glitter Gradient - Static by default */
-            background: linear-gradient(
-                to right,
-                #00695C 20%,
-                #26A69A 30%,
-                #FFD54F 40%, 
-                #FFFFFF 50%, 
-                #FFD54F 60%, 
-                #26A69A 70%,
-                #00695C 80%
-            );
+            background: linear-gradient(to right, var(--primary-color) 20%, #80CBC4 30%, var(--accent-gold) 40%, #FFF 50%, var(--accent-gold) 60%, #80CBC4 70%, var(--primary-color) 80%);
             background-size: 200% auto;
-            color: #00695C;
+            color: var(--primary-color);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0px 2px 4px rgba(0, 105, 92, 0.15);
-            
-            /* Ensure the background is centered initially so it looks nice while static */
+            text-shadow: 0px 2px 10px rgba(0,0,0,0.1);
             background-position: 0% center;
+            transition: opacity 0.3s;
         }
-
-        /* This class triggers the animation */
-        .sparkle-active {
-            animation: shimmer 2s linear 1 forwards;
-        }
+        .sparkle-active { animation: shimmer 2s linear 1 forwards; }
 
         .top-right-controls { display: flex; gap: 8px; align-items: center; }
 
@@ -105,27 +115,62 @@
             background: transparent;
             border: none;
             font-size: 20px;
-            color: #90A4AE;
+            color: var(--text-color);
+            opacity: 0.6;
             cursor: pointer;
             padding: 4px;
-            transition: color 0.3s;
+            transition: transform 0.2s, opacity 0.2s;
         }
-        .icon-btn:active { color: #37474F; transform: scale(1.1); }
-        
-        #langBtn { font-size: 12px; border: 1px solid #90A4AE; padding: 4px 6px; border-radius: 8px; font-weight: 700; }
+        .icon-btn:active { transform: scale(1.1); opacity: 1; }
 
-        p { color: #546E7A; margin-top: 5px; font-size: 14px; }
+        #levelDisplay {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-top: -5px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
 
         #counter {
-            font-size: 80px;
+            font-size: 70px;
             font-weight: 800;
-            background: -webkit-linear-gradient(#26C6DA, #00897B);
+            background: -webkit-linear-gradient(#4DD0E1, var(--primary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 10px 0;
+            margin: 0;
             filter: drop-shadow(0px 4px 10px rgba(38, 198, 218, 0.3));
         }
 
+        /* CATEGORY CHIPS */
+        .chip-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .chip {
+            background: var(--chip-bg);
+            border: var(--glass-border);
+            color: var(--chip-text);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip.active {
+            background: var(--chip-active);
+            color: var(--chip-text-active);
+            transform: scale(1.05);
+            border-color: transparent;
+        }
+
+        /* INPUT AREA */
         .input-container {
             width: 100%;
             max-width: 500px;
@@ -142,32 +187,33 @@
             font-size: 16px;
             border: 2px solid transparent;
             border-radius: 20px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            background: var(--input-bg);
+            border: var(--glass-border);
+            backdrop-filter: blur(5px);
             outline: none;
             color: var(--text-color);
             transition: border 0.3s;
             transform: translateZ(0); 
         }
+        #glimmerInput::placeholder { color: var(--text-color); opacity: 0.5; }
         #glimmerInput:focus { border-color: var(--primary-color); }
 
         .prompt-btn {
-            background: white;
-            border: none;
+            background: var(--input-bg);
+            border: var(--glass-border);
             border-radius: 50%;
             width: 50px;
             height: 50px;
             font-size: 20px;
-            color: #FFB74D; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            color: var(--accent-gold); 
             cursor: pointer;
             flex-shrink: 0;
         }
-        .prompt-btn:active { transform: scale(0.9); background: #FFF3E0; }
+        .prompt-btn:active { transform: scale(0.9); }
 
         button.capture-btn {
             background: var(--primary-color);
-            color: white;
+            color: white; /* Always white text on the main button */
             border: none;
             padding: 18px;
             font-size: 16px;
@@ -175,18 +221,19 @@
             cursor: pointer;
             width: 100%;
             max-width: 500px;
-            font-weight: 600;
-            box-shadow: 0 10px 20px rgba(38, 166, 154, 0.3);
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             transition: transform 0.1s;
         }
         button.capture-btn:active { transform: scale(0.96); }
 
+        /* LIST */
         ul {
             list-style-type: none;
             padding: 0;
             width: 100%;
             max-width: 500px;
-            margin-top: 30px;
+            margin-top: 25px;
         }
 
         li {
@@ -206,9 +253,11 @@
             color: var(--text-color);
         }
 
-        .timestamp { font-size: 11px; color: #90A4AE; display: block; margin-top: 4px; }
-        .delete-btn { background: transparent; color: #CFD8DC; font-size: 20px; border: none; cursor: pointer; padding: 0 10px; }
-        .delete-btn:active { color: #EF5350; }
+        .timestamp { font-size: 11px; opacity: 0.6; display: block; margin-top: 4px; }
+        .tag-icon { margin-right: 6px; font-size: 14px; }
+        
+        .delete-btn { background: transparent; color: var(--text-color); opacity: 0.3; font-size: 20px; border: none; cursor: pointer; padding: 0 10px; }
+        .delete-btn:active { opacity: 1; color: #EF5350; }
 
         footer {
             position: fixed;
@@ -220,51 +269,61 @@
             z-index: 10;
             padding-bottom: max(20px, env(safe-area-inset-bottom)); 
             padding-top: 15px;
-            background: linear-gradient(to top, rgba(224, 247, 250, 0.95) 20%, transparent); 
+            background: linear-gradient(to top, var(--glass-bg) 20%, transparent); 
             pointer-events: none; 
         }
 
         footer a {
-            color: #546E7A;
+            color: var(--text-color);
             text-decoration: none;
             font-size: 12px;
             font-weight: 500;
-            background: rgba(255,255,255,0.9);
+            background: var(--glass-bg);
             padding: 8px 15px;
             border-radius: 20px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             cursor: pointer;
             pointer-events: auto;
         }
 
+        /* Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.5);
             z-index: 100;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(5px);
         }
         .modal-card {
-            background: white;
+            background: var(--input-bg); /* Use input bg for consistency with theme */
+            background-color: white; /* Fallback for light mode to ensure readability */
             width: 80%;
             max-width: 400px;
             padding: 25px;
             border-radius: 25px;
             text-align: left;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             animation: popUp 0.3s ease;
+            color: #37474F; /* Force dark text in modal for readability against white card */
         }
+        /* Dark mode specific modal fix */
+        body.dark-mode .modal-card {
+            background-color: #263238;
+            color: #E1F5FE;
+        }
+
         .modal-card h2 { margin-top: 0; color: var(--primary-color); }
-        .modal-card p { line-height: 1.5; color: var(--text-color); }
+        .modal-card p { line-height: 1.5; }
         .close-modal {
-            background: #ECEFF1;
-            color: #333;
-            border: none;
+            background: var(--glass-bg);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: inherit;
             padding: 10px 20px;
             border-radius: 10px;
             margin-top: 15px;
@@ -273,12 +332,13 @@
             cursor: pointer;
         }
 
+        /* Recall Highlight Styling */
+        .recall-date { font-size: 12px; opacity: 0.6; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .recall-text { font-size: 22px; font-weight: 700; color: var(--primary-color); display: block; margin: 10px 0; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes shimmer {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
-        }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
 
     </style>
 </head>
@@ -286,17 +346,24 @@
 
     <div class="top-bar">
         <div class="streak-badge">🔥 <span id="streakCount">0</span></div>
-        <h1 id="appTitle">Glimmer</h1>
         <div class="top-right-controls">
-            <button id="langBtn" class="icon-btn" onclick="toggleLanguage()">ES</button>
+            <button class="icon-btn" onclick="recallGlimmer()" title="Recall Memory">🕘</button>
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌗</button>
             <button class="icon-btn" onclick="exportData()" title="Download CSV">↓</button>
-            <button class="icon-btn" onclick="resetAll()">↺</button>
         </div>
     </div>
-    
-    <p id="subtitle">Capture calm moments.</p>
-    
+
+    <h1 id="appTitle">Glimmer</h1>
     <div id="counter">0</div>
+    <div id="levelDisplay">Novice</div>
+    
+    <div class="chip-container">
+        <div class="chip" onclick="selectTag('nature', this)">🌿 Nature</div>
+        <div class="chip" onclick="selectTag('people', this)">👥 People</div>
+        <div class="chip" onclick="selectTag('food', this)">🍕 Food</div>
+        <div class="chip" onclick="selectTag('cozy', this)">☕ Cozy</div>
+        <div class="chip" onclick="selectTag('win', this)">🏆 Win</div>
+    </div>
     
     <div class="input-container">
         <input type="text" id="glimmerInput" placeholder="What sparked joy?">
@@ -310,81 +377,129 @@
     <footer>
         <a id="linkWhy" onclick="openModal('why')">Why?</a>
         <a id="linkAbout" onclick="openModal('about')">About</a>
-        <a id="linkHow" onclick="openModal('how')">How to Use</a>
+        <a id="linkSettings" onclick="resetAll()">Reset</a>
     </footer>
 
     <div id="infoModal" class="modal-overlay">
         <div class="modal-card">
             <h2 id="modalTitle">Title</h2>
-            <p id="modalContent">Content goes here...</p>
+            <div id="modalContent">Content goes here...</div>
             <button id="closeBtn" class="close-modal" onclick="closeModal()">Close</button>
         </div>
     </div>
 
     <script>
-        // --- TRANSLATION & PROMPTS ---
+        // --- CONSTANTS ---
         const translations = {
             en: {
-                subtitle: "Capture calm moments.",
                 placeholder: "What sparked joy?",
-                capture: "✨ Capture",
-                resetWarning: "Reset all your Glimmers and Streak?",
                 emptyWarning: "Please type something...",
-                footer: { why: "Why?", about: "About", how: "How to Use" },
-                close: "Close",
-                modals: {
-                    why: { title: "Why Glimmer?", content: "Our brains are wired to notice danger. 'Glimmers' are the opposite: tiny moments of safety and joy. Spotting them reduces stress." },
-                    about: { title: "About", content: "Glimmer Hunter is a minimal tool designed to help you collect micro-moments of joy. Built with a focus on privacy." },
-                    how: { title: "How to Use", content: "1. Look for small happy things.<br>2. Type it in and tap Capture.<br>3. Tap the lightbulb (💡) if you need an idea!" }
-                },
+                resetWarning: "Reset all your Glimmers and Streak?",
+                levelNames: ["Novice", "Spark Hunter", "Joy Collector", "Light Bringer", "Glimmer Master"],
                 prompts: ["Did you see a nice color today?", "Did you hear a good song?", "Did you enjoy a meal?", "Did you feel cozy somewhere?", "Did someone make you smile?", "Did you see nature today?", "Did you smell something nice?"]
             },
             es: {
-                subtitle: "Captura momentos de calma.",
                 placeholder: "¿Qué te dio alegría?",
-                capture: "✨ Capturar",
-                resetWarning: "¿Reiniciar todos tus Glimmers y tu racha?",
                 emptyWarning: "Por favor escribe algo...",
-                footer: { why: "Por qué", about: "Acerca de", how: "Cómo usar" },
-                close: "Cerrar",
-                modals: {
-                    why: { title: "¿Por qué Glimmer?", content: "Nuestros cerebros están programados para notar el peligro. Los 'Glimmers' son lo opuesto: pequeños momentos de seguridad y alegría." },
-                    about: { title: "Acerca de", content: "Glimmer Hunter es una herramienta minimalista. Privacidad total: tus datos no salen de tu teléfono." },
-                    how: { title: "Cómo usar", content: "1. Busca pequeñas cosas felices.<br>2. Escríbelo y toca Capturar.<br>3. ¡Toca la bombilla (💡) si necesitas una idea!" }
-                },
-                prompts: ["¿Viste un color bonito hoy?", "¿Escuchaste una buena canción?", "¿Disfrutaste tu comida?", "¿Te sentiste cómodo en algún lugar?", "¿Alguien te hizo sonreír?", "¿Viste algo de naturaleza?", "¿Oliste algo agradable?"]
+                resetWarning: "¿Reiniciar todo?",
+                levelNames: ["Novato", "Cazador", "Coleccionista", "Portador de Luz", "Maestro"],
+                prompts: ["¿Viste un color bonito?", "¿Escuchaste una buena canción?", "¿Disfrutaste tu comida?", "¿Te sentiste cómodo?", "¿Alguien te hizo sonreír?", "¿Viste naturaleza?", "¿Oliste algo rico?"]
             }
         };
 
-        // --- LOAD SETTINGS ---
+        const tagEmojis = {
+            "nature": "🌿",
+            "people": "👥",
+            "food": "🍕",
+            "cozy": "☕",
+            "win": "🏆"
+        };
+
+        // --- STATE & STORAGE ---
         let count = parseInt(localStorage.getItem('glimmerCount')) || 0;
         let glimmerHistory = JSON.parse(localStorage.getItem('glimmerHistory')) || [];
         let streak = parseInt(localStorage.getItem('glimmerStreak')) || 0;
         let lastDate = localStorage.getItem('lastGlimmerDate'); 
         let currentLang = localStorage.getItem('glimmerLang') || 'en';
+        let isDarkMode = localStorage.getItem('glimmerTheme') === 'dark';
+        let currentTag = null; // Stores currently selected tag string
 
         // --- INITIALIZATION ---
+        // Apply theme immediately
+        if (isDarkMode) document.body.classList.add('dark-mode');
+
         document.getElementById("counter").innerText = count;
         document.getElementById("streakCount").innerText = streak;
-        updateLanguage(currentLang); 
+        updateLevelDisplay();
         renderHistory();
         
         // Trigger Title Animation on Load
-        window.addEventListener('load', () => {
-            triggerSparkle();
-        });
+        window.addEventListener('load', () => triggerSparkle());
 
         // --- CORE FUNCTIONS ---
+        
+        // 1. Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('glimmerTheme', isDarkMode ? 'dark' : 'light');
+        }
+
+        // 2. Tag Selection
+        function selectTag(tag, element) {
+            // Toggle off if clicking same tag
+            if (currentTag === tag) {
+                currentTag = null;
+                element.classList.remove('active');
+            } else {
+                // Remove active from all others
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                currentTag = tag;
+                element.classList.add('active');
+            }
+        }
+
+        // 3. Level System
+        function updateLevelDisplay() {
+            const levels = translations[currentLang].levelNames;
+            let levelName = levels[0];
+            
+            if (count >= 10) levelName = levels[1];
+            if (count >= 50) levelName = levels[2];
+            if (count >= 100) levelName = levels[3];
+            if (count >= 500) levelName = levels[4];
+
+            document.getElementById("levelDisplay").innerText = levelName;
+        }
+
+        // 4. Recall Memory
+        function recallGlimmer() {
+            if (glimmerHistory.length === 0) {
+                alert("Capture a glimmer first!");
+                return;
+            }
+            const randomItem = glimmerHistory[Math.floor(Math.random() * glimmerHistory.length)];
+            
+            const dateObj = new Date(randomItem.date || new Date());
+            const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const emoji = randomItem.tag ? tagEmojis[randomItem.tag] : "✨";
+
+            const content = `
+                <span class="recall-date">${dateStr}</span>
+                <span class="recall-text">${emoji} ${randomItem.text}</span>
+                <p>A moment worth remembering.</p>
+            `;
+            
+            document.getElementById("modalTitle").innerText = "Flashback";
+            document.getElementById("modalContent").innerHTML = content;
+            document.getElementById("infoModal").style.display = "flex";
+        }
+
         function triggerSparkle() {
             const title = document.getElementById("appTitle");
-            // Remove class to reset animation
             title.classList.remove("sparkle-active");
-            
-            // This line forces the browser to recognize the removal (a "reflow")
-            // before we add it back, ensuring the animation restarts.
             void title.offsetWidth; 
-            
-            // Add class to start animation
             title.classList.add("sparkle-active");
         }
 
@@ -407,23 +522,28 @@
             glimmerHistory.unshift({ 
                 text: text, 
                 date: now.toISOString(),
-                time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                tag: currentTag // Save the tag!
             });
 
             saveData();
             
+            // UI Updates
             document.getElementById("counter").innerText = count;
             document.getElementById("streakCount").innerText = streak;
-            inputField.value = "";
-            renderHistory();
+            updateLevelDisplay();
             
-            // VISUAL REWARDS
+            inputField.value = "";
+            // Reset tags
+            currentTag = null;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+
+            renderHistory();
             fireConfetti();
-            triggerSparkle(); // Trigger the title animation here
+            triggerSparkle();
         }
 
         function fireConfetti() {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#26A69A', '#FF7043', '#FFD700'], disableForReducedMotion: true });
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#26A69A', '#FF7043', '#FFD700'] });
         }
 
         function inspireMe() {
@@ -431,44 +551,26 @@
             const randomPrompt = list[Math.floor(Math.random() * list.length)];
             const input = document.getElementById("glimmerInput");
             input.placeholder = randomPrompt;
-            input.style.border = "2px solid #FFB74D";
-            setTimeout(() => { input.style.border = "2px solid transparent"; }, 500);
+            input.style.borderColor = "var(--secondary-color)";
+            setTimeout(() => { input.style.borderColor = "transparent"; }, 500);
         }
 
         function exportData() {
-            let csvContent = "Date,Time,Glimmer\n";
+            let csvContent = "Date,Tag,Glimmer\n";
             glimmerHistory.forEach(item => {
                 let d = item.date ? new Date(item.date) : new Date(); 
-                const dateStr = d.toLocaleDateString();
-                const timeStr = item.time || d.toLocaleTimeString(); 
+                const dateStr = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+                const tagStr = item.tag ? item.tag : "";
                 const safeText = item.text.replace(/"/g, '""');
-                csvContent += `"${dateStr}","${timeStr}","${safeText}"\n`;
+                csvContent += `"${dateStr}","${tagStr}","${safeText}"\n`;
             });
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `glimmer-history-${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `glimmer-export.csv`;
             a.click();
             URL.revokeObjectURL(url);
-        }
-
-        function toggleLanguage() {
-            currentLang = currentLang === 'en' ? 'es' : 'en';
-            localStorage.setItem('glimmerLang', currentLang);
-            updateLanguage(currentLang);
-        }
-
-        function updateLanguage(lang) {
-            const t = translations[lang];
-            document.getElementById("subtitle").innerText = t.subtitle;
-            document.getElementById("glimmerInput").placeholder = t.placeholder;
-            document.getElementById("captureBtn").innerText = t.capture;
-            document.getElementById("linkWhy").innerText = t.footer.why;
-            document.getElementById("linkAbout").innerText = t.footer.about;
-            document.getElementById("linkHow").innerText = t.footer.how;
-            document.getElementById("closeBtn").innerText = t.close;
-            document.getElementById("langBtn").innerText = lang === 'en' ? 'ES' : 'EN';
         }
 
         function resetAll() {
@@ -476,9 +578,7 @@
                 count = 0; streak = 0; glimmerHistory = []; lastDate = null;
                 saveData();
                 localStorage.removeItem('lastGlimmerDate');
-                document.getElementById("counter").innerText = "0";
-                document.getElementById("streakCount").innerText = "0";
-                renderHistory();
+                location.reload(); 
             }
         }
 
@@ -487,14 +587,21 @@
             if(count > 0) count--;
             saveData();
             document.getElementById("counter").innerText = count;
+            updateLevelDisplay();
             renderHistory();
         }
 
         function openModal(type) {
-            const data = translations[currentLang].modals[type];
-            document.getElementById("modalTitle").innerText = data.title;
-            document.getElementById("modalContent").innerHTML = data.content;
-            document.getElementById("infoModal").style.display = "flex";
+            const modals = {
+                why: { title: "Why Glimmer?", content: "Our brains are wired to notice danger. 'Glimmers' are the opposite: tiny moments of safety and joy. Spotting them reduces stress and reshapes your nervous system." },
+                about: { title: "About", content: "Glimmer Hunter is a privacy-first tool. All data stays on your device. Created to help you find the light in everyday life." }
+            };
+            
+            if(modals[type]) {
+                document.getElementById("modalTitle").innerText = modals[type].title;
+                document.getElementById("modalContent").innerHTML = `<p>${modals[type].content}</p>`;
+                document.getElementById("infoModal").style.display = "flex";
+            }
         }
         function closeModal() { document.getElementById("infoModal").style.display = "none"; }
         document.getElementById("infoModal").addEventListener("click", function(e) { if (e.target === this) closeModal(); });
@@ -511,6 +618,7 @@
             listElement.innerHTML = ""; 
             const today = new Date();
             today.setHours(0,0,0,0);
+
             glimmerHistory.forEach((item, index) => {
                 let displayTime;
                 if (item.date) {
@@ -521,10 +629,20 @@
                         displayTime = new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                     }
                 } else {
-                    displayTime = item.time || "Old Entry";
+                    displayTime = item.time || "Past";
                 }
+
+                // Show Tag Emoji if exists
+                const tagDisplay = item.tag ? `<span class="tag-icon">${tagEmojis[item.tag]}</span>` : "";
+
                 const li = document.createElement("li");
-                li.innerHTML = `<div><strong>${item.text}</strong><span class="timestamp">${displayTime}</span></div><button class="delete-btn" onclick="deleteGlimmer(${index})">×</button>`;
+                li.innerHTML = `
+                    <div>
+                        <strong>${tagDisplay}${item.text}</strong>
+                        <span class="timestamp">${displayTime}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteGlimmer(${index})">×</button>
+                `;
                 listElement.appendChild(li);
             });
         }
