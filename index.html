@@ -134,10 +134,10 @@
         
         .sparkle-active { animation: shimmer 2.5s linear infinite; }
 
-        /* Beta Badge Style */
+        /* Beta Badge */
         .beta-badge {
             font-size: 10px;
-            -webkit-text-fill-color: var(--primary-color); /* Overrides gradient */
+            -webkit-text-fill-color: var(--primary-color);
             color: var(--primary-color);
             border: 1px solid var(--primary-color);
             padding: 2px 6px;
@@ -366,8 +366,6 @@
 
         .modal-card h2 { margin-top: 0; color: var(--primary-color); }
         .modal-card p { line-height: 1.6; font-size: 14px; opacity: 0.9; }
-        
-        /* Links inside modal */
         .modal-card a { color: var(--primary-color); text-decoration: none; font-weight: 700; }
         
         .close-modal {
@@ -407,11 +405,11 @@
         <div id="levelDisplay">Novice</div>
         
         <div class="chip-container">
-            <div class="chip" onclick="selectTag('nature', this)">🌿 Nature</div>
-            <div class="chip" onclick="selectTag('people', this)">👥 People</div>
-            <div class="chip" onclick="selectTag('food', this)">🍕 Food</div>
-            <div class="chip" onclick="selectTag('cozy', this)">☕ Cozy</div>
-            <div class="chip" onclick="selectTag('win', this)">🏆 Win</div>
+            <div class="chip" data-tag="nature" onclick="selectTag('nature', this)">🌿 Nature</div>
+            <div class="chip" data-tag="people" onclick="selectTag('people', this)">👥 People</div>
+            <div class="chip" data-tag="food" onclick="selectTag('food', this)">🍕 Food</div>
+            <div class="chip" data-tag="cozy" onclick="selectTag('cozy', this)">☕ Cozy</div>
+            <div class="chip" data-tag="win" onclick="selectTag('win', this)">🏆 Win</div>
         </div>
         
         <div class="input-wrapper">
@@ -452,11 +450,18 @@
                 capture: "✨ Capture",
                 emptyState: "No glimmers yet. Find one today!",
                 levelNames: ["Novice", "Spark Hunter", "Joy Collector", "Light Bringer", "Glimmer Master"],
+                // Added tag translations
+                tags: {
+                    nature: "🌿 Nature",
+                    people: "👥 People",
+                    food: "🍕 Food",
+                    cozy: "☕ Cozy",
+                    win: "🏆 Win"
+                },
                 prompts: ["Did you see a nice color today?", "Did you hear a good song?", "Did you enjoy a meal?", "Did you feel cozy somewhere?", "Did someone make you smile?", "Did you see nature today?", "Did you smell something nice?"],
                 footer: { why: "Why?", about: "About", how: "How to Use" },
                 modals: {
                     why: { title: "Why Glimmer?", content: "Our brains are wired to notice danger. 'Glimmers' are the opposite: tiny moments of safety and joy. Spotting them reduces stress and reshapes your nervous system." },
-                    // ADDED INSTAGRAM LINK HERE
                     about: { title: "About", content: "Glimmer Hunter is a privacy-first tool. All data stays on your device.<br><br>Created by <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
                     how: { title: "How to Use", content: "1. <b>Spot it:</b> Look for small happy things.<br>2. <b>Tag it:</b> Tap a category (like Nature or Cozy).<br>3. <b>Capture it:</b> Type a note and save.<br><br>💡 Tap the lightbulb for ideas!" }
                 },
@@ -469,11 +474,18 @@
                 capture: "✨ Capturar",
                 emptyState: "Aún no hay Glimmers. ¡Encuentra uno!",
                 levelNames: ["Novato", "Cazador", "Coleccionista", "Portador de Luz", "Maestro"],
+                // Added tag translations
+                tags: {
+                    nature: "🌿 Naturaleza",
+                    people: "👥 Gente",
+                    food: "🍕 Comida",
+                    cozy: "☕ Relax",
+                    win: "🏆 Logro"
+                },
                 prompts: ["¿Viste un color bonito?", "¿Escuchaste una buena canción?", "¿Disfrutaste tu comida?", "¿Te sentiste cómodo?", "¿Alguien te hizo sonreír?", "¿Viste naturaleza?", "¿Oliste algo rico?"],
                 footer: { why: "Por qué", about: "Acerca de", how: "Cómo usar" },
                 modals: {
                     why: { title: "¿Por qué Glimmer?", content: "Nuestros cerebros están programados para notar peligro. Los 'Glimmers' son lo opuesto: momentos de seguridad y alegría." },
-                    // ADDED INSTAGRAM LINK HERE
                     about: { title: "Acerca de", content: "Herramienta de privacidad total. Tus datos se quedan en tu dispositivo.<br><br>Creado por <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
                     how: { title: "Cómo usar", content: "1. <b>Busca:</b> Pequeñas cosas felices.<br>2. <b>Etiqueta:</b> Toca una categoría.<br>3. <b>Captura:</b> Escribe y guarda.<br><br>💡 ¡Toca la bombilla para ideas!" }
                 },
@@ -527,6 +539,8 @@
 
         function updateLanguage(lang) {
             const t = translations[lang];
+            
+            // Standard Text Updates
             document.getElementById("glimmerInput").placeholder = t.placeholder;
             document.getElementById("captureBtn").innerText = t.capture;
             document.getElementById("linkWhy").innerText = t.footer.why;
@@ -534,6 +548,16 @@
             document.getElementById("linkHow").innerText = t.footer.how;
             document.getElementById("closeBtn").innerText = t.close;
             document.getElementById("langBtn").innerText = lang === 'en' ? 'ES' : 'EN';
+            
+            // Tag Updates
+            const tags = t.tags;
+            document.querySelectorAll('.chip').forEach(chip => {
+                const key = chip.getAttribute('data-tag');
+                if(tags[key]) {
+                    chip.innerText = tags[key];
+                }
+            });
+
             updateLevelDisplay();
         }
 
