@@ -104,6 +104,7 @@
             padding: 2px 6px; 
             border-radius: 6px; 
             font-weight: 800; 
+            min-width: 24px;
         }
 
         /* --- HERO & INPUT SECTION --- */
@@ -391,7 +392,7 @@
     <div class="top-bar">
         <div class="streak-badge">🔥 <span id="streakCount">0</span></div>
         <div class="top-right-controls">
-            <button id="langBtn" class="icon-btn" onclick="toggleLanguage()">ES</button>
+            <button id="langBtn" class="icon-btn" onclick="toggleLanguage()">EN</button>
             <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle Theme">🌗</button>
             <button class="icon-btn" onclick="exportData()" aria-label="Download CSV">↓</button>
             <button class="icon-btn" onclick="resetAll()" aria-label="Reset App">↺</button>
@@ -450,7 +451,6 @@
                 capture: "✨ Capture",
                 emptyState: "No glimmers yet. Find one today!",
                 levelNames: ["Novice", "Spark Hunter", "Joy Collector", "Light Bringer", "Glimmer Master"],
-                // Added tag translations
                 tags: {
                     nature: "🌿 Nature",
                     people: "👥 People",
@@ -474,7 +474,6 @@
                 capture: "✨ Capturar",
                 emptyState: "Aún no hay Glimmers. ¡Encuentra uno!",
                 levelNames: ["Novato", "Cazador", "Coleccionista", "Portador de Luz", "Maestro"],
-                // Added tag translations
                 tags: {
                     nature: "🌿 Naturaleza",
                     people: "👥 Gente",
@@ -490,6 +489,29 @@
                     how: { title: "Cómo usar", content: "1. <b>Busca:</b> Pequeñas cosas felices.<br>2. <b>Etiqueta:</b> Toca una categoría.<br>3. <b>Captura:</b> Escribe y guarda.<br><br>💡 ¡Toca la bombilla para ideas!" }
                 },
                 close: "Cerrar"
+            },
+            no: {
+                placeholder: "Hva ga deg glede?",
+                emptyWarning: "Vennligst skriv noe...",
+                resetWarning: "Nullstille alle Glimmers og streak?",
+                capture: "✨ Lagre",
+                emptyState: "Ingen glimmers ennå. Finn en i dag!",
+                levelNames: ["Nybeynner", "Gnistjeger", "Gledes-samler", "Lysbringer", "Glimmer-mester"],
+                tags: {
+                    nature: "🌿 Natur",
+                    people: "👥 Folk",
+                    food: "🍕 Mat",
+                    cozy: "☕ Kos",
+                    win: "🏆 Seier"
+                },
+                prompts: ["Så du en fin farge?", "Hørte du en bra sang?", "Smakte maten godt?", "Hadde du det koselig?", "Fikk noen deg til å smile?", "Så du noe fint i naturen?", "Luktet det godt?"],
+                footer: { why: "Hvorfor?", about: "Om", how: "Hvordan" },
+                modals: {
+                    why: { title: "Hvorfor Glimmer?", content: "Hjernen vår er laget for å oppdage fare. 'Glimmers' er det motsatte: små øyeblikk av trygghet og glede. Å legge merke til dem reduserer stress." },
+                    about: { title: "Om", content: "Personvern først. Alle data lagres kun på din enhet.<br><br>Laget av <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
+                    how: { title: "Hvordan bruke", content: "1. <b>Se det:</b> Se etter små, glade ting.<br>2. <b>Tagg det:</b> Trykk på en kategori (f.eks. Natur eller Kos).<br>3. <b>Lagre:</b> Skriv et notat og lagre.<br><br>💡 Trykk på lyspæren for ideer!" }
+                },
+                close: "Lukk"
             }
         };
 
@@ -500,6 +522,8 @@
             "cozy": "☕",
             "win": "🏆"
         };
+
+        const supportedLangs = ['en', 'es', 'no'];
 
         // --- STATE ---
         let count = parseInt(localStorage.getItem('glimmerCount')) || 0;
@@ -516,6 +540,10 @@
 
         document.getElementById("counter").innerText = count;
         document.getElementById("streakCount").innerText = streak;
+        
+        // Ensure valid lang if saved version is old
+        if(!translations[currentLang]) currentLang = 'en';
+        
         updateLanguage(currentLang); 
         updateLevelDisplay();
         renderHistory();
@@ -531,7 +559,10 @@
         }
 
         function toggleLanguage() {
-            currentLang = currentLang === 'en' ? 'es' : 'en';
+            // Cycle: EN -> ES -> NO -> EN
+            let idx = supportedLangs.indexOf(currentLang);
+            currentLang = supportedLangs[(idx + 1) % supportedLangs.length];
+            
             localStorage.setItem('glimmerLang', currentLang);
             updateLanguage(currentLang);
             renderHistory();
@@ -547,7 +578,9 @@
             document.getElementById("linkAbout").innerText = t.footer.about;
             document.getElementById("linkHow").innerText = t.footer.how;
             document.getElementById("closeBtn").innerText = t.close;
-            document.getElementById("langBtn").innerText = lang === 'en' ? 'ES' : 'EN';
+            
+            // Button now shows CURRENT language
+            document.getElementById("langBtn").innerText = lang.toUpperCase();
             
             // Tag Updates
             const tags = t.tags;
@@ -662,6 +695,8 @@
         }
 
         function deleteGlimmer(index) {
+            // Translation for this specific alert is not in dict, keeping simple confirm
+            // Could add to dict but keeping simple for now.
             if(confirm("Remove this glimmer?")) {
                 glimmerHistory.splice(index, 1);
                 if(count > 0) count--;
