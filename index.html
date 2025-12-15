@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Glimmer Hunter</title>
+    <style>
+        /* This section controls how the app LOOKS (The CSS) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fcfcfc;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        #counter {
+            font-size: 80px;
+            font-weight: bold;
+            color: #FFD700; /* Gold color */
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            touch-action: manipulation; /* Improves tapping on mobile */
+        }
+
+        button:active {
+            transform: scale(0.95); /* Shrinks slightly when tapped */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Glimmer Hunter</h1>
+    <p>Micro-moments of joy found today:</p>
+    
+    <div id="counter">0</div>
+    
+    <button onclick="addGlimmer()">✨ I saw a Glimmer!</button>
+
+    <script>
+        let count = 0;
+
+        function addGlimmer() {
+            // 1. Increase the count by 1
+            count = count + 1;
+            
+            // 2. Update the number on the screen
+            document.getElementById("counter").innerText = count;
+            
+            // 3. Optional: Alert to confirm it worked (We will remove this later)
+            // alert("Nice! One glimmer caught."); 
+        }
+    </script>
+
+</body>
+</html>
