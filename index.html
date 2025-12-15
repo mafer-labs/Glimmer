@@ -59,19 +59,33 @@
     <button onclick="addGlimmer()">✨ I saw a Glimmer!</button>
 
     <script>
-        let count = 0;
+    // PART 1: Initialize (Read the saved number when the app loads)
+    // LocalStorage lets the app save small pieces of text on the user's phone.
+    
+    // 1. Get the saved value for 'glimmerCount' or use 0 if nothing is saved yet.
+    let count = parseInt(localStorage.getItem('glimmerCount')) || 0;
+    
+    // 2. Display the saved number when the app starts
+    document.getElementById("counter").innerText = count;
 
-        function addGlimmer() {
-            // 1. Increase the count by 1
-            count = count + 1;
-            
-            // 2. Update the number on the screen
-            document.getElementById("counter").innerText = count;
-            
-            // 3. Optional: Alert to confirm it worked (We will remove this later)
-            // alert("Nice! One glimmer caught."); 
+
+    // PART 2: The Action (Increase the number and save it)
+    function addGlimmer() {
+        // 1. Increase the count by 1
+        count = count + 1;
+        
+        // 2. Update the number on the screen
+        document.getElementById("counter").innerText = count;
+
+        // 3. NEW: Save the updated count to the phone's memory
+        localStorage.setItem('glimmerCount', count);
+
+        // Optional: Vibration feedback for a better app feel (iOS compatible)
+        if (window.navigator.vibrate) {
+            window.navigator.vibrate(50); // Vibrate for 50 milliseconds
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>
