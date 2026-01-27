@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#E0F7FA">
-    <title>Glimmer Beta</title>
+    <title>Glimmer Hunter</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -96,8 +96,12 @@
             cursor: pointer;
             padding: 5px;
             transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .icon-btn:active { transform: scale(0.9); opacity: 1; }
+        .icon-btn img { width: 20px; height: 20px; border-radius: 50%; }
 
         #langBtn { 
             font-size: 10px; 
@@ -136,7 +140,6 @@
         
         .sparkle-active { animation: shimmer 2.5s linear infinite; }
 
-        /* Beta Badge */
         .beta-badge {
             font-size: 10px;
             -webkit-text-fill-color: var(--primary-color);
@@ -249,11 +252,8 @@
         }
         button.capture-btn:active { transform: scale(0.98); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         body.dark-mode button.capture-btn { color: #0f172a; }
-
-        /* Update State for Button */
-        button.capture-btn.updating {
-            background: var(--secondary-color);
-        }
+        
+        button.capture-btn.updating { background: var(--secondary-color); }
 
         /* --- SCROLLABLE LIST AREA --- */
         #list-container {
@@ -373,6 +373,8 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.4);
             animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             color: var(--text-color);
+            max-height: 80vh;
+            overflow-y: auto;
         }
         body.dark-mode .modal-card { background: #1e293b; }
 
@@ -391,6 +393,25 @@
             font-weight: 700;
             cursor: pointer;
         }
+        
+        /* Leaderboard Styles */
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            align-items: center;
+        }
+        body.dark-mode .leaderboard-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .leaderboard-rank { font-weight: 800; width: 30px; color: var(--secondary-color); }
+        .leaderboard-user { flex-grow: 1; font-weight: 600; }
+        .leaderboard-score { font-weight: 800; color: var(--primary-color); }
+        .leaderboard-me { background: rgba(38, 166, 154, 0.1); border-radius: 8px; }
+
+        .google-btn {
+            background: #4285F4; color: white; border: none; padding: 10px 20px;
+            border-radius: 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 10px auto;
+        }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -403,6 +424,8 @@
     <div class="top-bar">
         <div class="streak-badge">🔥 <span id="streakCount">0</span></div>
         <div class="top-right-controls">
+            <button id="leaderboardBtn" class="icon-btn" onclick="openLeaderboard()" title="Leaderboard">🏆</button>
+            <button id="authBtn" class="icon-btn" onclick="handleAuth()" title="Login">👤</button>
             <button id="langBtn" class="icon-btn" onclick="toggleLanguage()">EN</button>
             <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle Theme">🌗</button>
             <button class="icon-btn" onclick="exportData()" aria-label="Download CSV">↓</button>
@@ -452,8 +475,116 @@
         </div>
     </div>
 
-    <script>
-        // --- CONSTANTS ---
+    <script type="module">
+        // --- FIREBASE IMPORTS ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAR_3bUYYCNm56pZNVEhXONZaCP0SNukww",
+            authDomain: "glimmer-hunter.firebaseapp.com",
+            projectId: "glimmer-hunter",
+            storageBucket: "glimmer-hunter.firebasestorage.app",
+            messagingSenderId: "986699142300",
+            appId: "1:986699142300:web:9f0e67a0dcda02aba54959"
+        };
+
+        // --- INIT FIREBASE ---
+        let app, auth, db, currentUser;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                updateAuthUI();
+                if(user) updateCloudScore(); // Sync on login
+            });
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+        }
+
+        // --- AUTH FUNCTIONS ---
+        window.handleAuth = async function() {
+            if (!auth) return alert("Offline Mode");
+            if (currentUser) {
+                if(confirm("Logout?")) {
+                    await signOut(auth);
+                }
+            } else {
+                const provider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    alert("Login failed: " + error.message);
+                }
+            }
+        }
+
+        function updateAuthUI() {
+            const btn = document.getElementById("authBtn");
+            if (currentUser) {
+                btn.innerHTML = `<img src="${currentUser.photoURL}" alt="User">`;
+            } else {
+                btn.innerHTML = `👤`;
+            }
+        }
+
+        window.updateCloudScore = async function() {
+            if (!currentUser || !db) return;
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    name: currentUser.displayName,
+                    score: count,
+                    photo: currentUser.photoURL,
+                    lastUpdate: new Date()
+                }, { merge: true });
+            } catch (e) { console.error("Sync error", e); }
+        }
+
+        window.openLeaderboard = async function() {
+            if (!db) { alert("Leaderboard unavailable (Offline)"); return; }
+            
+            document.getElementById("modalTitle").innerText = "🏆 Top Glimmers";
+            document.getElementById("modalContent").innerHTML = "<p>Loading...</p>";
+            document.getElementById("infoModal").style.display = "flex";
+
+            try {
+                const q = query(collection(db, "users"), orderBy("score", "desc"), limit(10));
+                const querySnapshot = await getDocs(q);
+                let html = "<div style='display:flex; flex-direction:column; gap:5px;'>";
+                
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isMe = currentUser && doc.id === currentUser.uid;
+                    html += `
+                        <div class="leaderboard-row ${isMe ? 'leaderboard-me' : ''}">
+                            <div class="leaderboard-rank">#${rank++}</div>
+                            <div class="leaderboard-user">${data.name.split(' ')[0]}</div>
+                            <div class="leaderboard-score">${data.score}</div>
+                        </div>
+                    `;
+                });
+                
+                if (!currentUser) {
+                    html += `<br><button class="google-btn" onclick="handleAuth()">Sign in to join!</button>`;
+                }
+                
+                html += "</div>";
+                document.getElementById("modalContent").innerHTML = html;
+
+            } catch (e) {
+                document.getElementById("modalContent").innerText = "Error loading ranking.";
+                console.error(e);
+            }
+        }
+
+        // --- STANDARD APP LOGIC ---
+
         const translations = {
             en: {
                 placeholder: "What sparked joy?",
@@ -463,19 +594,13 @@
                 update: "🔄 Update",
                 emptyState: "No glimmers yet. Find one today!",
                 levelNames: ["Novice", "Spark Hunter", "Joy Collector", "Light Bringer", "Glimmer Master"],
-                tags: {
-                    nature: "🌿 Nature",
-                    people: "👥 People",
-                    food: "🍕 Food",
-                    cozy: "☕ Cozy",
-                    win: "🏆 Win"
-                },
+                tags: { nature: "🌿 Nature", people: "👥 People", food: "🍕 Food", cozy: "☕ Cozy", win: "🏆 Win" },
                 prompts: ["Did you see a nice color today?", "Did you hear a good song?", "Did you enjoy a meal?", "Did you feel cozy somewhere?", "Did someone make you smile?", "Did you see nature today?", "Did you smell something nice?"],
                 footer: { why: "Why?", about: "About", how: "How to Use" },
                 modals: {
                     why: { title: "Why Glimmer?", content: "Our brains are wired to notice danger. 'Glimmers' are the opposite: tiny moments of safety and joy. Spotting them reduces stress and reshapes your nervous system." },
-                    about: { title: "About", content: "Glimmer Hunter is a privacy-first tool. All data stays on your device.<br><br>Created by <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
-                    how: { title: "How to Use", content: "1. <b>Spot it:</b> Look for small happy things.<br>2. <b>Tag it:</b> Tap a category (like Nature or Cozy).<br>3. <b>Capture it:</b> Type a note and save.<br><br>💡 Tap the lightbulb for ideas!" }
+                    about: { title: "About", content: "Glimmer Hunter is a privacy-first tool. <br><b>Notes stay on your device.</b><br>Only your score is synced to the cloud for the leaderboard.<br><br>Created by <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
+                    how: { title: "How to Use", content: "1. <b>Spot it:</b> Look for small happy things.<br>2. <b>Tag it:</b> Tap a category.<br>3. <b>Capture it:</b> Type a note and save.<br><br>🏆 <b>Compete:</b> Log in to see the global leaderboard!" }
                 },
                 levelUp: { title: "Level Up!", msg: "You have reached a new level: " },
                 close: "Close"
@@ -488,19 +613,13 @@
                 update: "🔄 Actualizar",
                 emptyState: "Aún no hay Glimmers. ¡Encuentra uno!",
                 levelNames: ["Novato", "Cazador", "Coleccionista", "Portador de Luz", "Maestro"],
-                tags: {
-                    nature: "🌿 Naturaleza",
-                    people: "👥 Gente",
-                    food: "🍕 Comida",
-                    cozy: "☕ Relax",
-                    win: "🏆 Logro"
-                },
+                tags: { nature: "🌿 Naturaleza", people: "👥 Gente", food: "🍕 Comida", cozy: "☕ Relax", win: "🏆 Logro" },
                 prompts: ["¿Viste un color bonito?", "¿Escuchaste una buena canción?", "¿Disfrutaste tu comida?", "¿Te sentiste cómodo?", "¿Alguien te hizo sonreír?", "¿Viste naturaleza?", "¿Oliste algo rico?"],
                 footer: { why: "Por qué", about: "Acerca de", how: "Cómo usar" },
                 modals: {
                     why: { title: "¿Por qué Glimmer?", content: "Nuestros cerebros están programados para notar peligro. Los 'Glimmers' son lo opuesto: momentos de seguridad y alegría." },
-                    about: { title: "Acerca de", content: "Herramienta de privacidad total. Tus datos se quedan en tu dispositivo.<br><br>Creado por <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
-                    how: { title: "Cómo usar", content: "1. <b>Busca:</b> Pequeñas cosas felices.<br>2. <b>Etiqueta:</b> Toca una categoría.<br>3. <b>Captura:</b> Escribe y guarda.<br><br>💡 ¡Toca la bombilla para ideas!" }
+                    about: { title: "Acerca de", content: "Herramienta de privacidad. <br><b>Tus notas se quedan en tu celular.</b><br>Solo tu puntaje se sube para el ranking.<br><br>Creado por <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
+                    how: { title: "Cómo usar", content: "1. <b>Busca:</b> Pequeñas cosas felices.<br>2. <b>Etiqueta:</b> Toca una categoría.<br>3. <b>Captura:</b> Escribe y guarda.<br><br>🏆 <b>Compite:</b> ¡Inicia sesión para ver el ranking!" }
                 },
                 levelUp: { title: "¡Subiste de Nivel!", msg: "Has alcanzado un nuevo nivel: " },
                 close: "Cerrar"
@@ -513,33 +632,20 @@
                 update: "🔄 Oppdater",
                 emptyState: "Ingen glimmers ennå. Finn en i dag!",
                 levelNames: ["Nybeynner", "Gnistjeger", "Gledes-samler", "Lysbringer", "Glimmer-mester"],
-                tags: {
-                    nature: "🌿 Natur",
-                    people: "👥 Folk",
-                    food: "🍕 Mat",
-                    cozy: "☕ Kos",
-                    win: "🏆 Seier"
-                },
+                tags: { nature: "🌿 Natur", people: "👥 Folk", food: "🍕 Mat", cozy: "☕ Kos", win: "🏆 Seier" },
                 prompts: ["Så du en fin farge?", "Hørte du en bra sang?", "Smakte maten godt?", "Hadde du det koselig?", "Fikk noen deg til å smile?", "Så du noe fint i naturen?", "Luktet det godt?"],
                 footer: { why: "Hvorfor?", about: "Om", how: "Hvordan" },
                 modals: {
                     why: { title: "Hvorfor Glimmer?", content: "Hjernen vår er laget for å oppdage fare. 'Glimmers' er det motsatte: små øyeblikk av trygghet og glede. Å legge merke til dem reduserer stress." },
-                    about: { title: "Om", content: "Personvern først. Alle data lagres kun på din enhet.<br><br>Laget av <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
-                    how: { title: "Hvordan bruke", content: "1. <b>Se det:</b> Se etter små, glade ting.<br>2. <b>Tagg det:</b> Trykk på en kategori (f.eks. Natur eller Kos).<br>3. <b>Lagre:</b> Skriv et notat og lagre.<br><br>💡 Trykk på lyspæren for ideer!" }
+                    about: { title: "Om", content: "Personvern først. <br><b>Notatene lagres på din enhet.</b><br>Kun poengsummen sendes til skyen for rangering.<br><br>Laget av <a href='https://instagram.com/mafer_cordovas' target='_blank'>@mafer_cordovas</a>" },
+                    how: { title: "Hvordan bruke", content: "1. <b>Se det:</b> Se etter små, glade ting.<br>2. <b>Tagg det:</b> Trykk på en kategori.<br>3. <b>Lagre:</b> Skriv et notat og lagre.<br><br>🏆 <b>Konkurrer:</b> Logg inn for å se rangeringen!" }
                 },
                 levelUp: { title: "Nivå opp!", msg: "Du har nådd et nytt nivå: " },
                 close: "Lukk"
             }
         };
 
-        const tagEmojis = {
-            "nature": "🌿",
-            "people": "👥",
-            "food": "🍕",
-            "cozy": "☕",
-            "win": "🏆"
-        };
-
+        const tagEmojis = { "nature": "🌿", "people": "👥", "food": "🍕", "cozy": "☕", "win": "🏆" };
         const supportedLangs = ['en', 'es', 'no'];
 
         // --- STATE ---
@@ -550,7 +656,7 @@
         let currentLang = localStorage.getItem('glimmerLang') || 'en';
         let isDarkMode = localStorage.getItem('glimmerTheme') === 'dark';
         let currentTag = null; 
-        let editIndex = -1; // -1 means regular add mode
+        let editIndex = -1;
 
         // --- INIT ---
         if (isDarkMode) document.body.classList.add('dark-mode');
@@ -559,28 +665,24 @@
         document.getElementById("counter").innerText = count;
         document.getElementById("streakCount").innerText = streak;
         
-        // Ensure valid lang if saved version is old
         if(!translations[currentLang]) currentLang = 'en';
-        
         updateLanguage(currentLang); 
         updateLevelDisplay();
         renderHistory();
         window.addEventListener('load', () => triggerSparkle());
 
-        // --- FUNCTIONS ---
+        // --- FUNCTIONS (Attached to Window for global access) ---
         
-        function toggleTheme() {
+        window.toggleTheme = function() {
             document.body.classList.toggle('dark-mode');
             isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('glimmerTheme', isDarkMode ? 'dark' : 'light');
             document.querySelector('meta[name="theme-color"]').setAttribute("content", isDarkMode ? "#0f172a" : "#E0F7FA");
         }
 
-        function toggleLanguage() {
-            // Cycle: EN -> ES -> NO -> EN
+        window.toggleLanguage = function() {
             let idx = supportedLangs.indexOf(currentLang);
             currentLang = supportedLangs[(idx + 1) % supportedLangs.length];
-            
             localStorage.setItem('glimmerLang', currentLang);
             updateLanguage(currentLang);
             renderHistory();
@@ -588,39 +690,26 @@
 
         function updateLanguage(lang) {
             const t = translations[lang];
-            
-            // Standard Text Updates
             document.getElementById("glimmerInput").placeholder = t.placeholder;
             
-            // Check if we are in edit mode for the button text
             const btn = document.getElementById("captureBtn");
-            if (editIndex > -1) {
-                btn.innerText = t.update;
-            } else {
-                btn.innerText = t.capture;
-            }
+            if (editIndex > -1) { btn.innerText = t.update; } else { btn.innerText = t.capture; }
 
             document.getElementById("linkWhy").innerText = t.footer.why;
             document.getElementById("linkAbout").innerText = t.footer.about;
             document.getElementById("linkHow").innerText = t.footer.how;
             document.getElementById("closeBtn").innerText = t.close;
-            
-            // Button now shows CURRENT language
             document.getElementById("langBtn").innerText = lang.toUpperCase();
             
-            // Tag Updates
             const tags = t.tags;
             document.querySelectorAll('.chip').forEach(chip => {
                 const key = chip.getAttribute('data-tag');
-                if(tags[key]) {
-                    chip.innerText = tags[key];
-                }
+                if(tags[key]) { chip.innerText = tags[key]; }
             });
-
             updateLevelDisplay();
         }
 
-        function selectTag(tag, element) {
+        window.selectTag = function(tag, element) {
             if (currentTag === tag) {
                 currentTag = null;
                 element.classList.remove('active');
@@ -651,18 +740,17 @@
             title.classList.add("sparkle-active");
         }
 
-        function addGlimmer() {
+        window.addGlimmer = function() {
             const inputField = document.getElementById("glimmerInput");
             const text = inputField.value;
 
             if (text.trim() === "") { alert(translations[currentLang].emptyWarning); return; }
 
             if (editIndex > -1) {
-                // --- UPDATE MODE ---
+                // UPDATE MODE
                 glimmerHistory[editIndex].text = text;
                 glimmerHistory[editIndex].tag = currentTag;
                 
-                // Reset Edit Mode
                 editIndex = -1;
                 const btn = document.getElementById("captureBtn");
                 btn.innerText = translations[currentLang].capture;
@@ -670,17 +758,14 @@
                 
                 saveData();
                 renderHistory();
-                
-                // Clear input
                 inputField.value = "";
                 currentTag = null;
                 document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                 return;
             }
 
-            // --- CREATE MODE ---
+            // CREATE MODE
             const prevLevel = getLevelName(count);
-
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             
@@ -694,6 +779,7 @@
             
             glimmerHistory.unshift({ text: text, date: now.toISOString(), tag: currentTag });
             saveData();
+            updateCloudScore(); // SYNC TO CLOUD
             
             document.getElementById("counter").innerText = count;
             document.getElementById("streakCount").innerText = streak;
@@ -706,7 +792,6 @@
             renderHistory();
             triggerSparkle();
 
-            // Check for level up
             if (prevLevel !== newLevel) {
                 triggerLevelUp(newLevel);
             } else {
@@ -714,15 +799,12 @@
             }
         }
 
-        function editGlimmer(index) {
+        window.editGlimmer = function(index) {
             const item = glimmerHistory[index];
             const inputField = document.getElementById("glimmerInput");
-            
-            // Populate input
             inputField.value = item.text;
             inputField.focus();
             
-            // Set tag
             currentTag = item.tag;
             document.querySelectorAll('.chip').forEach(c => {
                 c.classList.remove('active');
@@ -731,13 +813,10 @@
                 }
             });
 
-            // Set Edit Mode
             editIndex = index;
             const btn = document.getElementById("captureBtn");
             btn.innerText = translations[currentLang].update;
             btn.classList.add("updating");
-
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -746,39 +825,21 @@
         }
 
         function triggerLevelUp(levelName) {
-            // Big confetti
             const duration = 3000;
             const end = Date.now() + duration;
-
             (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#FFD700', '#FF7043']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#26A69A', '#42A5F5']
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FFD700', '#FF7043'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#26A69A', '#42A5F5'] });
+                if (Date.now() < end) { requestAnimationFrame(frame); }
             }());
 
-            // Show Modal
             const t = translations[currentLang].levelUp;
             document.getElementById("modalTitle").innerText = t.title;
             document.getElementById("modalContent").innerHTML = `<p>${t.msg} <strong>${levelName}</strong>!</p><h1>🏆</h1>`;
             document.getElementById("infoModal").style.display = "flex";
         }
 
-        function inspireMe() {
+        window.inspireMe = function() {
             const list = translations[currentLang].prompts;
             const randomPrompt = list[Math.floor(Math.random() * list.length)];
             const input = document.getElementById("glimmerInput");
@@ -788,7 +849,7 @@
             setTimeout(() => { input.style.borderColor = "var(--glass-border)"; }, 1000);
         }
 
-        function exportData() {
+        window.exportData = function() {
             let csvContent = "Date,Tag,Glimmer\n";
             glimmerHistory.forEach(item => {
                 let d = item.date ? new Date(item.date) : new Date(); 
@@ -806,24 +867,25 @@
             URL.revokeObjectURL(url);
         }
 
-        function resetAll() {
+        window.resetAll = function() {
             if (confirm(translations[currentLang].resetWarning)) {
                 count = 0; streak = 0; glimmerHistory = []; lastDate = null;
                 saveData();
+                updateCloudScore(); // Reset cloud score too
                 localStorage.removeItem('lastGlimmerDate');
                 location.reload(); 
             }
         }
 
-        function deleteGlimmer(index) {
+        window.deleteGlimmer = function(index) {
             if(confirm("Remove this glimmer?")) {
                 glimmerHistory.splice(index, 1);
                 if(count > 0) count--;
                 saveData();
+                updateCloudScore(); // Sync delete
                 document.getElementById("counter").innerText = count;
                 updateLevelDisplay();
                 
-                // If we were editing this specific item, cancel edit mode
                 if (editIndex === index) {
                     editIndex = -1;
                     const btn = document.getElementById("captureBtn");
@@ -831,12 +893,11 @@
                     btn.classList.remove("updating");
                     document.getElementById("glimmerInput").value = "";
                 }
-                
                 renderHistory();
             }
         }
 
-        function openModal(type) {
+        window.openModal = function(type) {
             const data = translations[currentLang].modals[type];
             if(data) {
                 document.getElementById("modalTitle").innerText = data.title;
@@ -844,7 +905,7 @@
                 document.getElementById("infoModal").style.display = "flex";
             }
         }
-        function closeModal() { document.getElementById("infoModal").style.display = "none"; }
+        window.closeModal = function() { document.getElementById("infoModal").style.display = "none"; }
         document.getElementById("infoModal").addEventListener("click", function(e) { if (e.target === this) closeModal(); });
 
         function saveData() {
